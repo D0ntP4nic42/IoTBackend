@@ -135,8 +135,22 @@ app.post("/telemetria/mock/:deviceId", async (req: Request, res: Response) => {
 
         const dadosTelemetria = await getTelemetria(count, deviceId)
 
-        // Salvamento no banco aqui:
-        // await TelemetriaModel.create(dadosTelemetria);
+        for (const dado of dadosTelemetria) {
+            await db.query(
+                `INSERT INTO telemetry (device_id, timestamp, speed, fuel, temperature, lat, lng, raw_json)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [
+                    dado.deviceId,
+                    dado.timestamp,
+                    dado.speed,
+                    dado.fuel,
+                    dado.temperature,
+                    dado.lat,
+                    dado.lng,
+                    dado.raw_json
+                ]
+            );
+        }
 
         res.status(201).json({
             message: "Telemetria mock registrada com sucesso",
@@ -157,5 +171,5 @@ app.listen(3000, async () => {
 async function getTelemetria(count = 1, deviceId: string) {
     const response = await fetch(url + "telemetry/" + deviceId + "?count=" + count);
     const data = await response.json();
-    console.log(data);
+    return data;
 }
